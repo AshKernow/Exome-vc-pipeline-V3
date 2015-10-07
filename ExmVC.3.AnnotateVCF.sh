@@ -250,9 +250,10 @@ VcfFil=$VcfFil.gz
 
 #Call next steps of pipeline if requested
 NextJob="Recalibrate Variant Quality"
-QsubCmd="qsub -o stdostde/ -e stdostde/ $EXOMPPLN/ExmVC.4.RecalibrateVariantQuality.sh -i $VcfFil -r $RefFil -l $LogFil -P"
-if [[ "$BadET" == "true" ]]; then QsubCmd=$QsubCmd" -B"; fi 
-if [[ "$NoRecal" == "true" ]]; then QsubCmd=$QsubCmd" -X"; fi
+NextCmd="$EXOMPPLN/ExmVC.4.RecalibrateVariantQuality.sh -i $VcfFil -r $RefFil -l $LogFil -P"
+if [[ "$BadET" == "true" ]]; then NextCmd=$NextCmd" -B"; fi 
+if [[ "$NoRecal" == "true" ]]; then NextCmd=$NextCmd" -X"; fi
+NextCmd=$NextCmd" > stdostde/AnnotateVCF.$VcfNam 2>&1"
 funcPipeLine
 
 #End Log

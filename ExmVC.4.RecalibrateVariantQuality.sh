@@ -2,7 +2,7 @@
 #$ -cwd -l mem=24G,time=6:: -N VQSRFilt
 
 #This script takes a raw VCF file and performs GATK's variant quality score recalibration
-#    InpFil - (required) - Path to VCF file or a list of VCF Files to be recalibrated
+#    InpFil - (required) - Path to VCF file to be recalibrated
 #    RefFil - (required) - shell file containing variables with locations of reference files, jar files, and resource directories; see list below for required variables
 #    LogFil - (optional) - File for logging progress
 #    Flag - P - PipeLine - call the next step in the pipeline at the end of the job
@@ -64,8 +64,6 @@ source $RefFil
 source $EXOMPPLN/exome.lib.sh #library functions begin "func" #library functions begin "func"
 
 #Set local Variables
-ArrNum=$SGE_TASK_ID
-funcFilfromList #if the input is a list get the appropriate input file for this job of the array --> $InpFil
 VcfFil=`readlink -f $InpFil` #resolve absolute path to vcf
 HapChec=$(less $VcfFil | head -n 20 | grep "HaplotypeCaller" | wc -l) #check which VC tool was used
 if [[ $HapChec -gt 0 ]]; then
@@ -75,7 +73,7 @@ else
 fi
 VcfNam=`basename $VcfFil | sed s/.gz$// | sed s/.vcf$// | sed s/.annotated$// | sed s/.list//` #basename for outputs
 if [[ -z "$LogFil" ]];then LogFil=$VcfNam.VQSR.log; fi # a name for the log file
-GatkLog=$VcfNam.gatklog #a log for GATK to output to, this is then trimmed and added to the script log
+GatkLog=$VcfNam.VQSR.gatklog #a log for GATK to output to, this is then trimmed and added to the script log
 TmpLog=$VcfNam.VQSR.temp.log #temporary log file 
 TmpDir=$VcfNam.VQSR.tempdir; mkdir -p $TmpDir #temporary directory
 
@@ -213,13 +211,13 @@ VcfFil=$VcfFil.gz
 
 #Call next steps of pipeline if requested
 NextJob="Recalibrate Variant Quality"
-QsubCmd="qsub -o stdostde/ -e stdostde/ $EXOMPPLN/ExmVC.5.MakeKinTestFilesFromVCF.sh -i $VcfFil -l $LogFil"
+NextCmd="$EXOMPPLN/ExmVC.5.MakeKinTestFilesFromVCF.sh -i $VcfFil -l $LogFil > stdostde/MakeKinFiles.$VcfNam 2>&1"
 funcPipeLine
 
 #Get VCF stats with python script
 PipeLine="true"
 NextJob="Get VCF stats"
-QsubCmd="qsub -o stdostde/ -e stdostde/ $EXOMPPLN/ExmVC.6.GetVCFStats.sh -i $VcfFil -l $LogFil"
+NextCmd="$EXOMPPLN/ExmVC.6.GetVCFStats.sh -i $VcfFil -l $LogFil > stdostde/GetVCFstats.$VcfNam 2>&1"
 funcPipeLine
 
 #End Log

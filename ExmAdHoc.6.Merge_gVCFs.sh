@@ -1,5 +1,4 @@
 #!/bin/bash
-#$ -cwd  -l mem=12G,time=18:: -N CombgVCF
 
 #This script takes a list of gVCF files (filename must end ".list") and combines them into a single file
 #    InpFil - (required) - A list of gVCFs to be combined. The script run as an array job. List file name must end ".list"

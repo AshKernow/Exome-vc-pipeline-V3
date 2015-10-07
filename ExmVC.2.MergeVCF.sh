@@ -2,10 +2,10 @@
 #$ -cwd -l mem=4G,time=2:: -N MergeVCF
 
 #This script concatenates multiple vcfs into a single vcf, for example vcfs that have been split by chromosome. 
-#    VcfDir - (required) - A driectory containging vcf files to be concatenated - they should all contain the same samples 
+#    InpFil - (required) - A driectory containging vcf files to be concatenated - they should all contain the same samples 
 #    RefFil - (required) - shell file containing variables with locations of reference files, jar files, and resource directories; see list below for required variables
 #    LogFil - (optional) - File for logging progress
-#    Flag - C - ChecPrg - Only used by pipeline. The script will check that the number of files in the "Progress directory" is the same as the number in the VcfDir before commencing the merge. If the parameter is not provided the script will proceed regardless.
+#    Flag - C - ChecPrg - Only used by pipeline. The script will check that the number of files in the "Progress directory" is the same as the number in the InpFil before commencing the merge. If the parameter is not provided the script will proceed regardless.
 #    Flag - P - PipeLine - call the next step in the pipeline at the end of the job
 #    Flag - B - BadET - prevent GATK from phoning home
 #    Help - H - (flag) - get usage information
@@ -41,7 +41,7 @@ BadET="false"
 
 while getopts i:r:l:CPXBH opt; do
     case "$opt" in
-        i) VcfDir="$OPTARG";;
+        i) InpFil="$OPTARG";;
         r) RefFil="$OPTARG";; 
         l) LogFil="$OPTARG";;
         C) ChecPrg="true";;
@@ -53,7 +53,7 @@ while getopts i:r:l:CPXBH opt; do
 done
 
 #check all required paramaters present
-if [[ ! -e "$VcfDir" ]] || [[ ! -e "$RefFil" ]]; then echo "Missing/Incorrect required arguments"; echo "$usage"; exit; fi
+if [[ ! -e "$InpFil" ]] || [[ ! -e "$RefFil" ]]; then echo "Missing/Incorrect required arguments"; echo "$usage"; exit; fi
 
 #Call the RefFil to load variables
 RefFil=`readlink -f $RefFil`
@@ -63,9 +63,9 @@ source $RefFil
 source $EXOMPPLN/exome.lib.sh #library functions begin "func" #library functions begin "func"
 
 ##Set local parameters
-VcfDir=${VcfDir%/} # remove trailing slash
-PrgDir=${VcfDir/splitfiles/progfiles}
-VcfNam=${VcfDir%%.*}
+InpFil=${InpFil%/} # remove trailing slash
+PrgDir=${InpFil/splitfiles/progfiles}
+VcfNam=${InpFil%%.*}
 VcfFil=$VcfNam.rawvariants.vcf #Outputfile
 if [[ -z "$LogFil" ]];then LogFil=$VcfNam.MergeVCF.log; fi # a name for the log file
 TmpLog=$VcfNam.MergeVCFtemp.log #temporary log file 
@@ -75,7 +75,7 @@ ProcessName="Merge & Sort individual chromosome VCFs with vcftools" # Descriptio
 funcWriteStartLog
 
 #Check progress directory if provided
-CountVCF=$(ls $VcfDir/ | grep vcf$ | wc -l)
+CountVCF=$(ls $InpFil/ | grep vcf$ | wc -l)
 echo $ChecPrg
 if [[ "$ChecPrg" == "true" ]]; then
     CountPrg=$(ls $PrgDir/ | grep genotypingcomplete$ | wc -l)
@@ -100,7 +100,7 @@ fi
 ##Merge and sort variant files 
 StepName="Merge & sort with vcftools" # Description of this step - used in log
 echo "Merging ... "$CountVCF" ... vcfs" >> $TmpLog
-StepCmd="vcf-concat -p $VcfDir/*vcf | vcf-sort -c > $VcfFil"
+StepCmd="vcf-concat -p $InpFil/*vcf | vcf-sort -c > $VcfFil"
 funcRunStep
 
 #Create a list of sample names used in the vcf
@@ -112,16 +112,17 @@ funcRunStep
 StepName="Gzip the vcf and index" # Description of this step - used in log
 StepCmd="bgzip $VcfFil; tabix -f -p vcf $VcfFil.gz"
 funcRunStep
-rm $VcfFil $VcfFil.idx
 VcfFil=$VcfFil.gz
 
 #Call next job
 NextJob="Annotate with Annovar"
-QsubCmd="qsub -o stdostde/ -e stdostde/ $EXOMPPLN/ExmVC.3.AnnotateVCF.sh -i $VcfFil -r $RefFil -l $LogFil -P"
-if [[ "$BadET" == "true" ]]; then QsubCmd=$QsubCmd" -B"; fi 
-if [[ "$NoRecal" == "true" ]]; then QsubCmd=$QsubCmd" -X"; fi
+NextCmd="$EXOMPPLN/ExmVC.3.AnnotateVCF.sh -i $VcfFil -r $RefFil -l $LogFil -P"
+if [[ "$BadET" == "true" ]]; then NextCmd=$NextCmd" -B"; fi 
+if [[ "$NoRecal" == "true" ]]; then NextCmd=$NextCmd" -X"; fi
+NextCmd=$NextCmd" > stdostde/AnnotateVCF.VcfNam 2>&1"
+echo $NextCmd
 funcPipeLine
 
 #End Log
 funcWriteEndLog
-rm -r $VcfDir
+#rm -r $InpFil
