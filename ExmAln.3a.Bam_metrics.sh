@@ -78,6 +78,7 @@ if [[ $ALLmet == "true" ]] || [[ $GCmet == "true" ]]; then
     StepCmd="java -Xmx8G -Djava.io.tmpdir=$TmpDir -jar $PICARD CollectGcBiasMetrics
  INPUT=$BamFil
  OUTPUT=$BamNam.GCbias_detail
+ SUMMARY_OUTPUT=$BamNam.GCbias_summary
  CHART=$BamNam.GCbias.pdf
  REFERENCE_SEQUENCE=$REF
  VALIDATION_STRINGENCY=SILENT
