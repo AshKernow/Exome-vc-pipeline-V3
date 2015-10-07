@@ -194,7 +194,7 @@ StepCmd="java -Xmx4G -Djava.io.tmpdir=$TmpDir -jar $PICARD SortSam
  SORT_ORDER=coordinate
  CREATE_INDEX=TRUE"
 funcRunStep
-#rm $AlnFil #removed the "Aligned bam"
+rm $AlnFil #removed the "Aligned bam"
 
 #Mark the duplicates
 StepName="Mark PCR Duplicates using PICARD"
@@ -204,7 +204,7 @@ StepCmd="java -Xmx4G -Djava.io.tmpdir=$TmpDir -jar $PICARD MarkDuplicates
  METRICS_FILE=$DdpFil.dup.metrics.txt
  CREATE_INDEX=TRUE"
 funcRunStep
-#rm $SrtFil ${SrtFil/bam/bai} #removed the "Sorted bam"
+rm $SrtFil ${SrtFil/bam/bai} #removed the "Sorted bam"
 
 
 if [[ ! $RGID ]]; then
