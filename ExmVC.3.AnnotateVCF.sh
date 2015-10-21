@@ -253,7 +253,7 @@ NextJob="Recalibrate Variant Quality"
 NextCmd="$EXOMPPLN/ExmVC.4.RecalibrateVariantQuality.sh -i $VcfFil -r $RefFil -l $LogFil -P"
 if [[ "$BadET" == "true" ]]; then NextCmd=$NextCmd" -B"; fi 
 if [[ "$NoRecal" == "true" ]]; then NextCmd=$NextCmd" -X"; fi
-NextCmd=$NextCmd" > stdostde/AnnotateVCF.$VcfNam 2>&1"
+NextCmd=$NextCmd" >stdostde/AnnotateVCF.$VcfNam.o 2>stdostde/AnnotateVCF.$VcfNam.e"
 funcPipeLine
 
 #End Log
