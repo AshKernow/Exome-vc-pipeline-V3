@@ -38,13 +38,14 @@
 
 #set default arguments
 usage="
-ExmAln.1b.ReAlign_Bam_with_BWAmem.sh -i <InputFile> -r <reference_file> -t <target intervals file> -a <readgroup_ID> -l <logfile> -PRFH
+ExmAln.1b.ReAlign_Bam_with_BWAmem.sh -i <InputFile> -r <reference_file> -t <target intervals file> -a <readgroup_ID> -s <NewSampleName> -l <logfile> -PRFH
 
      -i (required) - Path to Bam file
      -r (required) - shell file containing variables with locations of reference files and resource directories
      -l (optional) - Log file
      -t (optional) - Exome capture kit targets or other genomic intervals bed file (must end .bed for GATK compatability); this file is required if calling the pipeline but otherwise can be omitted
      -a (optional) - The RG ID to process, used when processing individual read groups separately
+     -s (optional) - A new sample name to place in the SM field of the RG header
      -P (flag) - Initiate exome analysis pipeline after completion of script
      -F (flag) - Fix mis-encoded base quality scores - Rewrite the qulaity scores from Illumina 1.5+ to Illumina 1.8+
      -H (flag) - echo this message and exit
@@ -55,13 +56,14 @@ FixMisencoded="false"
 SplitReads="false"
 
 #get arguments
-while getopts i:r:l:t:a:PFH opt; do
+while getopts i:r:l:t:a:s:PFH opt; do
     case "$opt" in
         i) InpFil="$OPTARG";;
         r) RefFil="$OPTARG";; 
         l) LogFil="$OPTARG";;
         t) TgtBed="$OPTARG";; 
         a) RGID="$OPTARG";;
+        s) NewSam="$OPTARG";;
         P) PipeLine="true";;
         F) FixMisencoded="true";;
         H) echo "$usage"; exit;;
@@ -163,27 +165,26 @@ else
     FlgStat=$BamNam.RGID_$RGID.bwamem.flagstat #output file for bam flag stats
     IdxStat=$BamNam.RGID_$RGID.idxstats #output file for bam index stats
 fi
-echo "ReadGroup header: $RgHeader" >> $TmpLog
+#Replace Sample Name in RG header if necessary
+if [[ $NewSam ]]; then
+    echo -e "Old ReadGroup header: $RgHeader" >> $TmpLog
+    RgHeader=$(echo $RgHeader | perl -pe 's|SM:.*?\\t|SM:'$NewSam'\\t|')
+    echo -e "New ReadGroup header: $RgHeader" >> $TmpLog
+else
+    echo -e "ReadGroup header: $RgHeader" >> $TmpLog
+fi
 
 ###Align using BWA mem algorithm
 # use HTSlib to shuffle the bam | then tranform it to an interleaved fastq discarding an singletons to a separate file as they mess up the interleaving | transform sam back to bam
 #StepCmd="samtools bamshuf -uOn 128 $BamFil tmp | samtools bam2fq -s $SngFil -O - | gzip | bwa mem -M -R \"$RgHeader\" -t 6 -p $REF - | samtools view -bS - > $AlnFil"
-
 StepName="Align with BWA mem"
 StepCmd="samtools bamshuf -uOn 128 $BamFil tmp |
  samtools bam2fq -s $SngFil -O - |"
-if [[ $FixMisencoded == "true" ]]; then 
+if [[ $FixMisencoded == "true" ]]; then
     StepCmd=$StepCmd" seqtk seq -Q64 -V - |"
 fi
 StepCmd=$StepCmd" gzip | bwa mem -M -R \"$RgHeader\" -t 6 -p $REF - |
  samtools view -bS - > $AlnFil"
-if [[ $RGID ]]; then 
-    StepCmd=${StepCmd#*|}
-    mkdir $RGID.split
-    SplitFil=$BamNam.$RGID.bam
-    StepCmd="samtools view -r $RGID -b $BamFil > $SplitFil; 
-    samtools bamshuf -uOn 128 $SplitFil $RGID.split/tmp |"$StepCmd
-fi
 funcRunStep
 
 #Sort the bam file by coordinate
@@ -214,7 +215,7 @@ if [[ ! $RGID ]]; then
     funcPipeLine
     NextJob="Get basic bam metrics"
     NextCmd="$EXOMPPLN/ExmAln.3a.Bam_metrics.sh -i $DdpFil -r $RefFil -l $LogFil > GetBamMets.$BamNam.$$.o 2>&1"
-    funcPipeLine
+    #funcPipeLine
 
     #Get flagstat
     StepName="Output flag stats using Samtools"
