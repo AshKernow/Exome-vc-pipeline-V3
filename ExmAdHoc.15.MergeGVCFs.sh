@@ -63,10 +63,12 @@ if [[ ! -e "$InpFil" ]]; then
 fi
 
 #set local variables
-if [[ -z "$OutFil" ]]; then OutFil=`basename $InpFil | sed s/.list$/`; fi # a name for the output file
-if [[ -z "$LogFil" ]]; then LogFil=${OutFil%bam}log; fi # a name for the log file
+if [[ -z "$OutFil" ]]; then OutFil=`basename $InpFil | sed s/.list$//`; fi # a name for the output file
+if [[ -z "$LogFil" ]]; then LogFil=$OutFil.mrgGVCF.log; fi # a name for the log file
+TmpLog=$OutFil.mrgGVCF.temp.log #temporary log file
+GatkLog=$OutFil.mrgGVCF.gatklog
+TmpDir=$OutFil.mrgGVCF.tempdir
 echo "    InpFil: "$InpFil"    OutFil: "$OutFil
-TmpLog=$InpFil.mrgGVCF.temp.log #temporary log file
 
 #Start Log File
 ProcessName="Merging gVCFs with GATK CombineGVCFs " # Description of the script - used in log
@@ -74,14 +76,19 @@ funcWriteStartLog
 
 ##Run Joint Variant Calling
 StepName="Joint call gVCFs with GATK"
-GVCFargument=`sed s/^/ -V /g $InpFil`
 StepCmd="java -Xmx20G -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
  -T CombineGVCFs 
  -R $REF
- $GVCFargument
- -o $VcfFil
+ -V $InpFil
+ -o $OutFil
  -log $GatkLog" #command to be run
-#funcRunStep
+funcRunStep
+
+#gzip and index
+StepName="Gzip the vcf and index" # Description of this step - used in log
+StepCmd="bgzip $OutFil; tabix -f -p vcf $OutFil.gz"
+funcRunStep
+rm $OutFil $OutFil.idx
 
 #End Log
 funcWriteEndLog
