@@ -72,7 +72,8 @@ if [[ $FilTyp == "gz" ]]; then
     sed s/--vcf/--gzvcf/g $TmpRelatScript > $TmpRelatScript.2
     mv -f $TmpRelatScript.2 $TmpRelatScript
 fi
-StepCmd="nohup $TmpRelatScript > $TmpRelatScript.o 2>&1 &"
+chmod 775 $TmpRelatScript
+StepCmd="nohup ./$TmpRelatScript > $TmpRelatScript.o 2>&1 &"
 funcRunStep
 
 #get missingness for each individual
@@ -83,8 +84,10 @@ if [[ $FilTyp == "gz" ]]; then
     sed s/--vcf/--gzvcf/g $TmpMissingScript > $TmpMissingScript.2
     mv -f $TmpMissingScript.2 $TmpMissingScript
 fi
-StepCmd="nohup $TmpMissingScript  > $TmpMissingScript.o 2>&1 &"
+chmod 775 $TmpMissingScript
+StepCmd="nohup ./$TmpMissingScript  > $TmpMissingScript.o 2>&1 &"
 funcRunStep
+
 
 #convert to plink - the vcftools vcf --> plink tool cannot run with > 1000 samples on the cluster due to limitations on temporary files. Therefore, for larger cohorts, it is necessary to split and remerge the plink files.
 less $VcfFil  | grep -m 1 "^#CHROM" | cut -f 10- | tr "\t" "\n" > $SampList
@@ -125,7 +128,7 @@ funcRunStep
 StepName="Run imputation of sex using plink"
 StepCmd="plink --bfile KinshipFiles/$OutNam --impute-sex --make-bed --out KinshipFiles/$OutNam.sexcheck"
 funcRunStep
-mv $OutNam.sexcheck.sexcheck $OutNam.sexcheck
+mv KinshipFiles/$OutNam.sexcheck.sexcheck KinshipFiles/$OutNam.sexcheck
 
 
 StepName="Plot histogram of F statistics"
@@ -151,4 +154,4 @@ funcRunStep
 funcWriteEndLog
 
 #Clean up
-rm -f Temp.$OutNam.* $OutNam*.sexcheck.* $OutNam*nosex $OutNam.ped $OutNam.map  $OutNam.log $OutNam.lmiss $OutNam*~ $TmpRscript $TmpRelatScript $TmpMissingScript
+rm -f Temp.$OutNam.* $OutNam*.sexcheck.* $OutNam*nosex $OutNam.ped $OutNam.map  $OutNam.log $OutNam.lmiss $OutNam*~ $TmpRscript KinshipFiles/*~
