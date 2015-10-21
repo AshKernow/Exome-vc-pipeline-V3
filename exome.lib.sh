@@ -43,16 +43,6 @@ funcLogStepStart () { echo "- Start $StepName `date`...">> $TmpLog ; }
 #-------------------------------------------------------------------------------------------------------
 
 #-------------------------------------------------------------------------------------------------------
-#func to trim GATK output log and write it to the temp log
-funcTrimGATKlog (){
-    echo "  --- GATK output log for $StepName ----------------" >> $TmpLog
-    grep -vE "ProgressMeter - *[dc0-9XY]|Copyright|INITIALIZATION COMPLETE|----|For support and documentation|Done preparing for traversal|^WARN[[:print:]]*SnpEff|ReadShardBalancer|this tool is currently set to genotype at most 6 alternate alleles in a given context" $GatkLog | awk '{ print "\t\t"$0 }' >> $TmpLog
-    echo "  --- --- --- --- --- --- ---" >> $TmpLog
-    rm $GatkLog
-}
-#-------------------------------------------------------------------------------------------------------
-
-#-------------------------------------------------------------------------------------------------------
 #function checks that the step has completed successfully, if not it writes and error message to the log and exits the script, otherwise it logs the completion of the step
 funcLogStepFinit () { 
 if [[ $? -ne 0 ]]; then #check exit status and if error then...
@@ -60,13 +50,14 @@ if [[ $? -ne 0 ]]; then #check exit status and if error then...
     echo "     $StepName failed `date`" >> $TmpLog
     echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" >> $TmpLog
     echo "=================================================================" >> $TmpLog
-    funcTrimGATKlog
-    grep "ERROR MESSAGE" $SGE_STDERR_PATH | awk '{ print "\t\t"$0 }' >> $TmpLog
+    if [[ $StepCmd == *GenomeAnalysisTK.jar* ]]; then mv $GatkLog GATK_Error_Log_$StepName"_"$GatkLog; fi
     cat $TmpLog >> $LogFil
     rm $TmpLog
     exit 1
+elif [[ $StepCmd == *GenomeAnalysisTK.jar* ]]; then 
+    tail -n 1 $GatkLog >> $TmpLog
+    rm $GatkLog
 fi
-if [[ "$StepCmd" == "*GenomeAnalysisTK.jar*" ]]; then funcTrimGATKlog; fi
 echo "- End $StepName `date`...">> $TmpLog # if no error log the completion of the step
 echo "-----------------------------------------------------------------------" >> $TmpLog
 }
@@ -76,7 +67,11 @@ echo "-----------------------------------------------------------------------" >
 #function to run and log the initiation/completion/failure of each step in the script
 funcRunStep (){
 funcLogStepStart
-echo $StepCmd >> $TmpLog
+if [[ `type -t "$StepCmd"` ]]; then 
+    type $StepCmd | tail -n +3  >> $TmpLog
+else
+    echo $StepCmd >> $TmpLog
+fi
 eval $StepCmd
 funcLogStepFinit
 }
@@ -89,7 +84,7 @@ echo "End "$0" $0:`date`" >> $TmpLog
 echo "===========================================================================================" >> $TmpLog
 echo "" >> $TmpLog
 cat $TmpLog >> $LogFil
-rm -r $TmpLog $TmpDir $GatkLog
+rm -r $TmpLog $TmpDir
 }
 #-------------------------------------------------------------------------------------------------------
 
