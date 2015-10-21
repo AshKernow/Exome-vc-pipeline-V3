@@ -66,6 +66,9 @@ source $EXOMPPLN/exome.lib.sh #library functions begin "func" #library functions
 InpFil=${InpFil%/} # remove trailing slash
 PrgDir=${InpFil/splitfiles/progfiles}
 VcfNam=${InpFil%%.*}
+#MrgFil=$VcfNam.merged.vcf #Merged VCF temporary
+SrtDir=$VcfNam.sort.tempdir # temporary directory for the vcf-sort command
+mkdir -p $SrtDir
 VcfFil=$VcfNam.rawvariants.vcf #Outputfile
 if [[ -z "$LogFil" ]];then LogFil=$VcfNam.MergeVCF.log; fi # a name for the log file
 TmpLog=$VcfNam.MergeVCFtemp.log #temporary log file 
@@ -83,7 +86,6 @@ if [[ "$ChecPrg" == "true" ]]; then
         echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" >> $TmpLog
         echo "     Check for completion of genotyping: Failed `date`" >> $TmpLog
         echo "     There are $CountVCF vcfs but only $CountPrg progress files. " >> $TmpLog
-        qstat -j $JOB_ID | grep -E "usage *:" >> $TmpLog #get cluster usage stats
         echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" >> $TmpLog
         echo "=================================================================" >> $TmpLog
         cat $TmpLog >> $LogFil
@@ -96,16 +98,15 @@ if [[ "$ChecPrg" == "true" ]]; then
     rm -rf $PrgDir
 fi
 
-
 ##Merge and sort variant files 
-StepName="Merge & sort with vcftools" # Description of this step - used in log
+StepName="Merge with vcftools" # Description of this step - used in log
 echo "Merging ... "$CountVCF" ... vcfs" >> $TmpLog
-StepCmd="vcf-concat -p $InpFil/*vcf | vcf-sort -c > $VcfFil"
+StepCmd="vcf-concat -p $InpFil/*vcf | vcf-sort -t $SrtDir -c > $VcfFil"
 funcRunStep
 
 #Create a list of sample names used in the vcf
 StepName="Output sample list"
-StepCmd="for i in \$(grep -m 1 ^#CHROM $VcfFil | cut -f 10-); do echo \$i >> $VcfNam.vcfheaderline.txt; done"
+StepCmd="grep -m 1 ^#CHROM $VcfFil | cut -f 10- | tr '\t' '\n' > $VcfNam.vcfheaderline.txt"
 funcRunStep
 
 #gzip and index
@@ -119,10 +120,10 @@ NextJob="Annotate with Annovar"
 NextCmd="$EXOMPPLN/ExmVC.3.AnnotateVCF.sh -i $VcfFil -r $RefFil -l $LogFil -P"
 if [[ "$BadET" == "true" ]]; then NextCmd=$NextCmd" -B"; fi 
 if [[ "$NoRecal" == "true" ]]; then NextCmd=$NextCmd" -X"; fi
-NextCmd=$NextCmd" > stdostde/AnnotateVCF.VcfNam 2>&1"
+NextCmd=$NextCmd" >stdostde/AnnotateVCF.VcfNam.o 2>stdostde/AnnotateVCF.VcfNam.e"
 echo $NextCmd
 funcPipeLine
 
 #End Log
 funcWriteEndLog
-#rm -r $InpFil
+rm -r $InpFil
