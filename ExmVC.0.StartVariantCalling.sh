@@ -83,7 +83,7 @@ source $EXOMPPLN/exome.lib.sh #library functions begin "func" #library functions
 funcGetTargetFile #If the target file has been specified using a code, get the full path from the exported variable
 if [[ -z "$VcfNam" ]];then VcfNam=`basename $InpFil`; VcfNam=${VcfNam/.list/}; fi # a name for the log file
 LogFil=$VcfNam.VariantCalling.log
-TmpLog=$VcfNam.VariantCallingon.temp.log
+TmpLog=$VcfNam.VariantCalling.temp.log
 BedDir=$VcfNam.TempTargetFiles #directory to contain the split target files
 mkdir -p $BedDir
 TgtNam=`basename $TgtBed` #The name of the original capture kit files
@@ -122,7 +122,7 @@ callSplitVC (){
     for SpltTgt in $BedDir/*; do
         CallCmd="nohup $EXOMPPLN/ExmVC.1hc.GenotypeGVCFs.sh -i $InpFil -r $RefFil -t $SpltTgt -n $VcfNam -a $ArrNum -l $LogFil" ;
         if [[ "$BadET" == "true" ]]; then CallCmd=$CallCmd" -B"; fi ;
-        CallCmd=$CallCmd" > stdostde/VariantCalling.$VcfNam.$ArrNum 2>&1 &" ;
+        CallCmd=$CallCmd" >stdostde/VariantCalling.$VcfNam.$ArrNum.o 2>stdostde/VariantCalling.$VcfNam.$ArrNum.e &" ;
         echo $CallCmd >> $TmpLog ;
         eval $CallCmd ;
         ArrNum=$(( ArrNum + 1 )) ;
@@ -141,6 +141,7 @@ CMD="ls $VcfDir | grep vcf$ | wc -l"
 echo $CMD >> $TmpLog
 eval $CMD >> $TmpLog
 echo "-----------------------------------------------------------------------" >> $TmpLog
+rm -r $BedDir #remove the temporary target file directory
 
 # Call Merge VCF
 StepName="Call Merge VCFs" >> $TmpLog
@@ -148,11 +149,8 @@ StepCmd="nohup $EXOMPPLN/ExmVC.2.MergeVCF.sh -i $VcfDir -r $RefFil -l $LogFil -C
 if [[ "$PipeLine" == "true" ]]; then StepCmd=$StepCmd" -P"; fi
 if [[ "$BadET" == "true" ]]; then StepCmd=$StepCmd" -B"; fi
 if [[ "$NoRecal" == "true" ]]; then StepCmd=$StepCmd" -X"; fi
-StepCmd=$StepCmd" > stdostde/MergeVCFs.$VcfNam 2>&1 &"
+StepCmd=$StepCmd" >stdostde/MergeVCFs.$VcfNam.o 2>stdostde/MergeVCFs.$VcfNam.e &"
 funcRunStep
 
 #End Log
 funcWriteEndLog
-
-
-
