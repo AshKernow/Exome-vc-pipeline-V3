@@ -34,5 +34,6 @@ export IllTS="$EXOMRES/CaptureKitBeds/truseq_exome_targeted_regions.b37.ordered.
 export BigTgt="$EXOMRES/CaptureKitBeds/custom_intervals/FullIntervals.bed"
 export RefSeq="$EXOMRES/CaptureKitBeds/Target_RefSeq_Exon_UCSC.bed"
 export VCRv2="$EXOMRES/CaptureKitBeds/Nimblegen_VCRome_v2.hg19.bed"
-export TGTCODES="AgtV2:AgtV4:AgtV5:AgtV5UTR:NbgV2:NbgV3:IllTS:BigTgt:RefSeq:VCRv2"
+export RGN="$EXOMRES/CaptureKitBeds/custom_intervals/RegeneronVCRcombined.bed"
+export TGTCODES="AgtV2:AgtV4:AgtV5:AgtV5UTR:NbgV2:NbgV3:IllTS:BigTgt:RefSeq:VCRv2:RGN"
 
