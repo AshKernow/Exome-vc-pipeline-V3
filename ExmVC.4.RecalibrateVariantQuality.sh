@@ -211,13 +211,13 @@ VcfFil=$VcfFil.gz
 
 #Call next steps of pipeline if requested
 NextJob="Recalibrate Variant Quality"
-NextCmd="$EXOMPPLN/ExmVC.5.MakeKinTestFilesFromVCF.sh -i $VcfFil -l $LogFil > stdostde/MakeKinFiles.$VcfNam 2>&1"
+NextCmd="$EXOMPPLN/ExmVC.5.MakeKinTestFilesFromVCF.sh -i $VcfFil -l $LogFil >stdostde/MakeKinFiles.$VcfNam.o 2>stdostde/MakeKinFiles.$VcfNam.e"
 funcPipeLine
 
 #Get VCF stats with python script
 PipeLine="true"
 NextJob="Get VCF stats"
-NextCmd="$EXOMPPLN/ExmVC.6.GetVCFStats.sh -i $VcfFil -l $LogFil > stdostde/GetVCFstats.$VcfNam 2>&1"
+NextCmd="$EXOMPPLN/ExmVC.6.GetVCFStats.sh -i $VcfFil -l $LogFil >stdostde/GetVCFstats.$VcfNam.o 2>stdostde/GetVCFstats.$VcfNam.e"
 funcPipeLine
 
 #End Log
