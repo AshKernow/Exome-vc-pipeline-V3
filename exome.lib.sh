@@ -24,7 +24,7 @@ fi
 #Function to enter information about the script initiation into the log
 funcWriteStartLog () {
 uname -a >> $TmpLog
-echo "Start "$0" - $0:`date`" >> $TmpLog
+echo "Start "$ProcessName" - $0:`date`" >> $TmpLog
 echo " Input File: "$InpFil >> $TmpLog
 if [[ -n "$BamFil" ]]; then echo " Bam File: "$BamFil >> $TmpLog; fi
 if [[ -n "$BamNam" ]]; then echo " Base name for outputs: $BamNam" >> $TmpLog; fi
