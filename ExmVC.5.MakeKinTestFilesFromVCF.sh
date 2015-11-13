@@ -154,4 +154,4 @@ funcRunStep
 funcWriteEndLog
 
 #Clean up
-rm -f Temp.$OutNam.* $OutNam*.sexcheck.* $OutNam*nosex $OutNam.ped $OutNam.map  $OutNam.log $OutNam.lmiss $OutNam*~ $TmpRscript KinshipFiles/*~
+rm -f Temp.$OutNam.* $OutNam*.sexcheck.* $OutNam*nosex $OutNam.ped $OutNam.map  $OutNam.log $OutNam.lmiss $OutNam*~ $TmpRscript KinshipFiles/*~ $TmpRelatScript $TmpMissingScript
