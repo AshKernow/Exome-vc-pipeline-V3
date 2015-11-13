@@ -25,11 +25,12 @@
 
 #set default arguments
 usage="
-ExmAdHoc.6.Merge_gVCFs.sh -i <InputFile> -r <reference_file> -t <targetfile> -l <logfile> -PABH
+ExmAdHoc.6.Merge_gVCFs.sh -i <InputFile> -r <reference_file> -o <OutputName> -l <logfile> -PABH
+
 
      -i (required) - \".list\" file containing a paths to gVCFs to be merged
      -r (required) - shell file containing variables with locations of reference files and resource directories
-     -n (optional) - Analysis/output VCF name - will be derived from input filename if not provided
+     -o (optional) - Analysis/output VCF name - will be derived from input filename if not provided
      -l (optional) - Log file
      -B (flag) - Prevent GATK from phoning home
      -H (flag) - echo this message and exit
@@ -37,11 +38,11 @@ ExmAdHoc.6.Merge_gVCFs.sh -i <InputFile> -r <reference_file> -t <targetfile> -l 
 
 BadET="false"
 
-while getopts i:r:n:l:PBH opt; do
+while getopts i:r:o:l:PBH opt; do
     case "$opt" in
         i) InpFil="$OPTARG";;
         r) RefFil="$OPTARG";; 
-        n) VcfNam="$OPTARG";;
+        o) VcfNam="$OPTARG";;
         l) LogFil="$OPTARG";;
         B) BadET="true";;
         H) echo "$usage"; exit;;
@@ -64,7 +65,7 @@ funcGetTargetFile #If the target file has been specified using a code, get the f
 if [[ -z "$VcfNam" ]];then VcfNam=`basename $InpFil`; VcfNam=${VcfNam%%.*}; fi  # a name for the output files
 if [[ -z $LogFil ]]; then LogFil=$VcfNam.CmbGVCF.log; fi # a name for the log file
 InpFil=`readlink -f $InpFil` #resolve absolute path to bam
-VcfFil=$VcfNam.Combined.g.vcf.gz #Output File
+VcfFil=$VcfNam.Combined.g.vcf #Output File
 GatkLog=$VcfNam.CmbGVCF.gatklog #a log for GATK to output to, this is then trimmed and added to the script log
 TmpLog=$VcfNam.CmbGVCF.temp.log #temporary log file
 TmpDir=$VcfNam.CmbGVCF.tempdir; mkdir -p $TmpDir #temporary directory
@@ -83,6 +84,12 @@ StepCmd="java -Xmx7G -Djava.io.tmpdir=$TmpDir -jar $GATKJAR
  -log $GatkLog" #command to be run
 funcGatkAddArguments # Adds additional parameters to the GATK command depending on flags (e.g. -B or -F)
 funcRunStep
+
+##gzip and index the gVCF
+StepName="gzip and index the gVCF"
+StepCmd="bgzip $VcfFil; tabix -f -p vcf $VcfFil.gz"
+funcRunStep
+rm $VcfFil.idx
 
 #End Log
 funcWriteEndLog
