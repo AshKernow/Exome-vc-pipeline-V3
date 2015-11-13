@@ -13,30 +13,41 @@
 #    OutNam - (optional) - A name for the output file. If this is not provided it will be derived from the directory name.
 #    Help - H - (flag) - get usage information
 
+#Required Variable:
+EXOMPPLN="/home/local/ARCS/ads2202/scripts/ExomePipelineScripts"
 
 #list of required tools:
 # standard linux library
+
+
+## This file also requires exome.lib.sh - which contains various functions used throughout the Exome analysis scripts; this file should be in the same directory as this script
+
 ###############################################################
 
 usage="
-<-t 1-2>* ExmAdHoc.1.ConcatenateFastq.sh -i <InputDirectory> -t <Type> -o <OutputName>
+<-t 1-2>* ExmAdHoc.1.ConcatenateFastq.sh -i <InputDirectory> -t <Type> -r <READ> -o <OutputName>
 *NOTE: If using PE then call the job as an array job using \"-t 1-2\"
 
      -i (required) - Path to directory containing fastq.gz files
      -t (required) - \"PE\" for paired-end \"SE\" for single-end
+     -r (optional) - R1 or R2 - for paired-end, specifies which group of files to concatenate - there is no need to specify this, the PE option will call two new jobs
      -o (optional) - Output filename - if not provided the directory name will be used
      -H (flag) - echo this message and exit
 "
 
 #get arguments
-while getopts i:t:o:H opt; do
+while getopts i:t:o:r:H opt; do
     case "$opt" in
         i) FqDir="$OPTARG";;
         t) Type="$OPTARG";; 
         o) OutNam="$OPTARG";;
+        r) ReadEnd="$OPTARG";;
         H) echo "$usage"; exit;;
     esac
 done
+
+#Load script library
+source $EXOMPPLN/exome.lib.sh #library functions begin "func" #library functions begin "func"
 
 #check directory exists
 if [[ ! -d $FqDir ]]; then
@@ -54,6 +65,7 @@ fi
 
 if [[ -z "$OutNam" ]]; then OutNam=$FqDir; fi #Set output file name if not provided
 
+echo $ReadEnd
 if [[ "$Type" == "SE" ]]; then
     echo "Single End"
     #If single end concatenate all fastq
@@ -62,31 +74,23 @@ if [[ "$Type" == "SE" ]]; then
     echo "$FqFils"
     zcat $FqFils | gzip > $OutNam".fastq.gz"
     echo "Done"
-elif [[ "$Type" == "PE" ]] && [[ "$SGE_TASK_ID" == "1" ]]; then
+elif [[ "$Type" == "PE" ]] && [[ "$ReadEnd" == "R1" ]]; then
     echo "Paired End - Read 1"
     FqFils=$(find $FqDir | grep -E "[_.]R1[_.]" | grep "fastq.gz" | uniq | sort)
     echo "----Fastq List R1 ---"
     echo "$FqFils"
     zcat $FqFils | gzip > $OutNam"_R1.fastq.gz"
     echo "Done R1"
-elif [[ "$Type" == "PE" ]] && [[ "$SGE_TASK_ID" == "2" ]]; then
+elif [[ "$Type" == "PE" ]] && [[ "$ReadEnd" == "R2" ]]; then
     echo "Paired End - Read 2"
     FqFils=$(find $FqDir | grep -E "[_.]R2[_.]" | grep "fastq.gz" | uniq | sort)
     echo "----Fastq List R2 ---"
     echo "$FqFils"
     zcat $FqFils | gzip > $OutNam"_R2.fastq.gz"
     echo "Done R2"
-elif [[ "$Type" == "PE" ]] && [[ "$SGE_TASK_ID" == "undefined" ]]; then
-    echo "Paired End"
-    #if paired end do R1 first then R2
-    FqFils=$(find $FqDir | grep -E "[_.]R1[_.]" | grep "fastq.gz" | uniq | sort)
-    echo "----Fastq List R1 ---"
-    echo "$FqFils"
-    zcat $FqFils | gzip > $OutNam"_R1.fastq.gz"
-    echo "Done R1"
-    FqFils=$(find $FqDir | grep -E "[_.]R2[_.]" | grep "fastq.gz" | uniq | sort)
-    echo "----Fastq List R2 ---"
-    echo "$FqFils"
-    zcat $FqFils | gzip > $OutNam"_R2.fastq.gz"
-    echo "Done R2"
+elif [[ "$Type" == "PE" ]] && [[ ! $ReadEnd ]]; then
+    ThisScript=`readlink -f $0`
+    echo "Paired End - sending new jobs"
+    nohup $ThisScript -i $FqDir -t "PE" -o $OutNam -r "R1" > Concate$OutNam.R1.o 2> Concate$OutNam.R1.e &
+    nohup $ThisScript -i $FqDir -t "PE" -o $OutNam -r "R2" > Concate$OutNam.R2.o 2> Concate$OutNam.R2.e &
 fi
