@@ -213,6 +213,8 @@ if [[ ! $RGID ]]; then
     NextJob="Run Genotype VCF"
     NextCmd='$EXOMPPLN/ExmAln.2.HaplotypeCaller_GVCFmode.sh -i $DdpFil -r $RefFil -t $TgtBed -l $LogFil -B > MakegVCF.$BamNam.$$.o 2>&1'
     funcPipeLine
+    #Always call QC
+    PipeLine="true"
     NextJob="Get basic bam metrics"
     NextCmd="$EXOMPPLN/ExmAln.3a.Bam_metrics.sh -i $DdpFil -r $RefFil -l $LogFil > GetBamMets.$BamNam.$$.o 2>&1"
     funcPipeLine
