@@ -1,5 +1,4 @@
 #!/bin/bash
-#$ -cwd  -l mem=10G,time=24:: -N HCgVCF
 
 #This script takes a bam file and runs variant calling using the HaplotypeCaller in gVCF mode
 #    InpFil - (required) - Path to Bam file to be aligned. 
