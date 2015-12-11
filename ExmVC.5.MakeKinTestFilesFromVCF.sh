@@ -2,6 +2,7 @@
 
 #This script takes a VCF file and generates files to check the familial relationships and sex of the samples
 #    InpFil - (required) - Path to VCF file or a list of VCF Files to be recalibrated
+#    RefFil - (required) - shell file containing variables with locations of reference files, jar files, and resource directories; see list below for required variables
 #    OutNam - (optional) - Name for output files
 #    LogFil - (optional) - File for logging progress
 #    Help - H - (flag) - get usage info#rmation
@@ -14,22 +15,27 @@
 # vcftools
 # R
 
+#list of required vairables in reference file:
+# $EXOMPPLN - directory containing exome analysis pipeline scripts
+
 ## This file also requires exome.lib.sh - which contains various functions used throughout the Exome analysis scripts; this file should be in the same directory as this script
 
 ###############################################################
 
 #set default arguments
-usage="ExmVC.3.RecalibrateVariantQuality.sh -i <InputFile> -o <output_file> -l <logfile> -PABH
+usage="ExmVC.3.RecalibrateVariantQuality.sh -i <InputFile> -r <reference_file> -o <output_file> -l <logfile> -PABH
 
      -i (required) - Path to VCF file
+     -r (required) - shell file containing variables with locations of reference files and resource directories
      -o (optional) - Base for output file names <default is VCF file name>
      -l (optional) - Log file
      -H (flag) - echo this message and exit
 "
 
-while getopts i:o:l:H opt; do
+while getopts i:r:o:l:H opt; do
     case "$opt" in
         i) InpFil="$OPTARG";;
+        r) RefFil="$OPTARG";; 
         o) OutNam="$OPTARG";; 
         l) LogFil="$OPTARG";;
         H) echo "$usage"; exit;;
@@ -38,7 +44,12 @@ done
 
 #check all required paramaters present
 echo $InpFil
-if [[ ! -e "$InpFil" ]]; then echo "Missing/Incorrect required arguments"; echo "$usage"; exit; fi
+if [[ ! -e "$InpFil" ]] || [[ ! -e "$RefFil" ]];  then echo "Missing/Incorrect required arguments"; echo "$usage"; exit; fi
+
+#Call the RefFil to load variables
+RefFil=`readlink -f $RefFil`
+source $RefFil
+
 
 #Load script library
 source $EXOMPPLN/exome.lib.sh #library functions begin "func" #library functions begin "func"
