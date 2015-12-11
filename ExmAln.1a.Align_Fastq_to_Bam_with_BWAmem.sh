@@ -11,6 +11,7 @@
 #    Samp2_CAGTGC_R1_L001.fastq.gz    @RG\tID:Samp2_CAGTGC_L001\tSM:Samp2\tLB:Lib245\tPL:ILLUMINA\tCN:BISRColumbia    Samp2_CAGTGC_R2_L001.fastq.gz
 #    Samp2_CAGTGC_R1_L002.fastq.gz    @RG\tID:Samp2_CAGTGC_L002\tSM:Samp2\tLB:Lib245\tPL:ILLUMINA\tCN:BISRColumbia    Samp2_CAGTGC_R2_L002.fastq.gz
 #    Samp3_ATTGTC_R1.fastq.gz    @RG\tID:Samp3_ATTGTC\tSM:Samp3\tLB:Lib268\tPL:ILLUMINA\tCN:BISRColumbia    Samp3_ATTGTC_R2.fastq.gz
+
 # The script will use the ID field of the RG header as the output file name
 # If the table contains multiple lines run the script as an array job, each job will read the line from the table corresponding to its $SGE_TASK_ID
 #    InpFil - (required) - Table defining input fastq files
@@ -115,7 +116,7 @@ funcRunStep
 
 #Sort the bam file by coordinate
 StepName="Sort Bam using PICARD"
-StepCmd="java -Xmx4G -Djava.io.tmpdir=$TmpDir -jar $PICARD SortSam
+StepCmd="java -Xmx4G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar $PICARD SortSam
  INPUT=$AlnFil
  OUTPUT=$SrtFil
  SORT_ORDER=coordinate
@@ -125,7 +126,7 @@ rm $AlnFil #remove the "Aligned bam"
 
 #Mark the duplicates
 StepName="Mark PCR Duplicates using PICARD"
-StepCmd="java -Xmx4G -Djava.io.tmpdir=$TmpDir -jar $PICARD MarkDuplicates
+StepCmd="java -Xmx4G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar $PICARD MarkDuplicates
  INPUT=$SrtFil
  OUTPUT=$DdpFil
  METRICS_FILE=$DdpFil.dup.metrics.txt
