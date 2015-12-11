@@ -79,6 +79,7 @@ source $EXOMPPLN/exome.lib.sh #library functions begin "func" #library functions
 
 
 #Set local Variables
+funcGetTargetFile #If the target file has been specified using a code, get the full path from the exported variable
 if [[ -z "$VcfNam" ]];then VcfNam=`basename $InpFil`; VcfNam=${VcfNam/.list/}; fi # a name for the output files
 if [[ -z $LogFil ]]; then LogFil=$VcfNam.GgVCF.log; fi # a name for the log file
 VcfDir=$VcfNam.splitfiles; mkdir -p $VcfDir # Directory to output slices to
