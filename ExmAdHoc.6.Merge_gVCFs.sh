@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #This script takes a list of gVCF files (filename must end ".list") and combines them into a single file
-#    InpFil - (required) - A list of gVCFs to be combined. The script run as an array job. List file name must end ".list"
+#    InpFil - (required) - A list of gVCFs to be combined. List file name must end ".list"
 #    RefFil - (required) - shell file containing variables with locations of reference files, jar files, and resource directories; see list below for required variables
 #    TgtBed - (optional) - Exome capture kit targets bed file (must end .bed for GATK compatability) ; may be specified using a code corresponding to a variable in the RefFil giving the path to the target file- only required if calling pipeline
 #    VcfNam - (optional) - A name for the analysis - to be used for naming output files. Will be derived from input filename if not provided; only used if calling pipeline
