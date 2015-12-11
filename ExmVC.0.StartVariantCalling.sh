@@ -45,7 +45,7 @@ ExmVC.0.StartVariantCalling.sh -i <InputFile> -r <reference_file> -t <targetfile
 AllowMisencoded="false"
 PipeLine="false"
 NoRecal="false"
-BadET="false"
+BadET="true"
 NumJobs=20
 
 while getopts i:r:t:n:l:j:PXBH opt; do
