@@ -210,8 +210,8 @@ VcfFil=$VcfFil.gz
 
 
 #Call next steps of pipeline if requested
-NextJob="Recalibrate Variant Quality"
-NextCmd="$EXOMPPLN/ExmVC.5.MakeKinTestFilesFromVCF.sh -i $VcfFil -l $LogFil >stdostde/MakeKinFiles.$VcfNam.o 2>stdostde/MakeKinFiles.$VcfNam.e"
+NextJob="Generate files for kinship and sex"
+NextCmd="$EXOMPPLN/ExmVC.5.MakeKinTestFilesFromVCF.sh -i $VcfFil -r $RefFil -l $LogFil >stdostde/MakeKinFiles.$VcfNam.o 2>stdostde/MakeKinFiles.$VcfNam.e"
 funcPipeLine
 
 #Get VCF stats with python script
