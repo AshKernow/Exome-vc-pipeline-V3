@@ -143,6 +143,9 @@ PipeLine="true"
 NextJob="Get basic bam metrics"
 NextCmd="$EXOMPPLN/ExmAln.3a.Bam_metrics.sh -i $DdpFil -r $RefFil -l $LogFil"
 funcPipeLine
+funcPipeLineNextJob="Run Depth of Coverage"
+NextCmd='$EXOMPPLN/ExmAln.8a.DepthofCoverage.sh -i $DdpFil -r $RefFil -t $TgtBed -l $LogFil -B > DoC.$BamNam.$$.o 2>&1'
+funcPipeLine
 
 #Get flagstat
 StepName="Output flag stats using Samtools"

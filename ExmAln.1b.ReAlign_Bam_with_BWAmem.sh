@@ -189,7 +189,7 @@ funcRunStep
 
 #Sort the bam file by coordinate
 StepName="Sort Bam using PICARD"
-StepCmd="java -Xmx4G -Djava.io.tmpdir=$TmpDir -jar $PICARD SortSam
+StepCmd="java -Xmx4G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar $PICARD SortSam
  INPUT=$AlnFil
  OUTPUT=$SrtFil
  SORT_ORDER=coordinate
@@ -199,7 +199,7 @@ rm $AlnFil #removed the "Aligned bam"
 
 #Mark the duplicates
 StepName="Mark PCR Duplicates using PICARD"
-StepCmd="java -Xmx4G -Djava.io.tmpdir=$TmpDir -jar $PICARD MarkDuplicates
+StepCmd="java -Xmx4G -XX:ParallelGCThreads=1 -Djava.io.tmpdir=$TmpDir -jar $PICARD MarkDuplicates
  INPUT=$SrtFil
  OUTPUT=$DdpFil
  METRICS_FILE=$DdpFil.dup.metrics.txt
@@ -215,8 +215,12 @@ if [[ ! $RGID ]]; then
     funcPipeLine
     NextJob="Get basic bam metrics"
     NextCmd="$EXOMPPLN/ExmAln.3a.Bam_metrics.sh -i $DdpFil -r $RefFil -l $LogFil > GetBamMets.$BamNam.$$.o 2>&1"
-    #funcPipeLine
-
+    funcPipeLine
+    funcPipeLineNextJob="Run Depth of Coverage"
+    NextCmd='$EXOMPPLN/ExmAln.8a.DepthofCoverage.sh -i $DdpFil -r $RefFil -t $TgtBed -l $LogFil -B > DoC.$BamNam.$$.o 2>&1'
+    funcPipeLine
+    
+    
     #Get flagstat
     StepName="Output flag stats using Samtools"
     StepCmd="samtools flagstat $DdpFil > $FlgStat"
