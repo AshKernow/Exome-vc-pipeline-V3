@@ -31,7 +31,7 @@
 usage="
 ExmAln.2.HaplotypeCaller_GVCFmode.sh -i <InputFile> -r <reference_file> -t <targetfile> -l <logfile> -FBH
 
-     -i (required) - Path to Bam file for variant calling or \".list\" file containing a multiple paths
+     -i (required) - Path to Bam file for variant calling
      -r (required) - shell file containing variables with locations of reference files and resource directories
      -t (required) - Exome capture kit targets or other genomic intervals bed file (must end .bed for GATK compatability)
      -l (optional) - Log file
