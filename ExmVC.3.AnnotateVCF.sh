@@ -124,7 +124,7 @@ colnames(dat) <- c(hed[-length(hed)], \"CHROM\", \"POS\", \"ID\", \"REF\", \"ALT
 # in each column replace %%% with . where there is no annotation for that locus
 ind <- paste(dat[,\"CHROM\"], dat[,\"POS\"]) #locus for each line
 for(i in 8:(ncol(dat)-5)) {
-  has.annot <- unique(ind[grep(\"%%%\", dat[,i], invert=T)]) #loci with some annotation in the column
+  has.annot <- unique(ind[grep(\"^\\\\.$%%%\", dat[,i], invert=T)]) #loci with some annotation in the column
   no.annot <- which(!ind%in%has.annot) #all lines pertaining to loci with no annotation in the column
   if(length(no.annot)>0) { dat[no.annot,i] <- \".\" }
   if(length(has.annot)>0) { dat[ind%in%has.annot,i] <- gsub(\"^\\\\.\$\", \"%%%\", dat[ind%in%has.annot,i]) }
